@@ -10,9 +10,13 @@ const CarServiceCenterTable = () => {
   });
 
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(100);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
+    if (window.location.search === "") {
+      window.history.replaceState({}, "", `?page=${page}&pageSize=${pageSize}`);
+    }
+
     const fetchData = async () => {
       const response = await axios(
         `http://localhost:3001/api/service-centers?pageSize=${pageSize}&page=${page}`
@@ -21,6 +25,18 @@ const CarServiceCenterTable = () => {
     };
 
     fetchData();
+
+    const pageFromParams = window.location.search?.split("&")[0]?.split("=")[1];
+    if (!isNaN(pageFromParams) && pageFromParams >= 1) {
+      setPage(Number(pageFromParams));
+    }
+
+    const pageSizeFromParams = window.location.search
+      ?.split("&")[1]
+      ?.split("=")[1];
+    if (!isNaN(pageSizeFromParams) && pageSizeFromParams >= 1) {
+      setPageSize(Number(pageSizeFromParams));
+    }
   }, [page, pageSize]);
 
   // TODO: Get columns information from data source.
@@ -60,6 +76,17 @@ const CarServiceCenterTable = () => {
       dataIndex: "capacity",
     },
   ];
+  const handleTableChange = (currentPage, currentPageSize) => {
+    setPage(currentPage);
+    setPageSize(currentPageSize);
+
+    // Update the URL with the new query parameters
+    window.history.replaceState(
+      {},
+      "",
+      `?page=${currentPage}&pageSize=${currentPageSize}`
+    );
+  };
 
   return (
     <>
@@ -77,11 +104,7 @@ const CarServiceCenterTable = () => {
           pageSize, // pageSize: pageSize
           current: page,
           total: data.total,
-          onChange: (page, pageSize) => {
-            console.log(page, pageSize, "???");
-            setPage(page);
-            setPageSize(pageSize);
-          },
+          onChange: handleTableChange,
         }}
         scroll={{ y: "calc(100vh - 400px)" }}
         rowKey="id"
