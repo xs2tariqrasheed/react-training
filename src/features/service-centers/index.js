@@ -8,10 +8,34 @@ const CarServiceCenterTable = () => {
     data: [],
     total: 0,
   });
+  const urlString = window.location.search;
+  const urlParams = new URLSearchParams(urlString);
+  const pageVal = urlParams.get("page");
+  const pageSizeVal = urlParams.get("pageSize");
+  const [page, setPage] = useState(pageVal ? Number(pageVal) : 1);
+  const [pageSize, setPageSize] = useState(
+    pageSizeVal ? Number(pageSizeVal) : 10
+  );
+  window.history.pushState(
+    {},
+    "",
+    `/service-center?page=${pageVal ? pageVal : 1}&pageSize=${
+      pageSizeVal ? pageSizeVal : 10
+    }`
+  );
 
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(100);
-
+  const setParams = (page, pageSize) => {
+    setPage(page);
+    setPageSize(pageSize);
+    window.history.pushState(
+      {},
+      "",
+      `/service-center?page=${page}&pageSize=${pageSize}`
+    );
+  };
+  const handleChange = (page, pageSize) => {
+    setParams(page, pageSize);
+  };
   useEffect(() => {
     const fetchData = async () => {
       const response = await axios(
@@ -77,11 +101,7 @@ const CarServiceCenterTable = () => {
           pageSize, // pageSize: pageSize
           current: page,
           total: data.total,
-          onChange: (page, pageSize) => {
-            console.log(page, pageSize, "???");
-            setPage(page);
-            setPageSize(pageSize);
-          },
+          onChange: handleChange,
         }}
         scroll={{ y: "calc(100vh - 400px)" }}
         rowKey="id"
