@@ -2,50 +2,46 @@ import React, { useState, useEffect } from "react";
 import { Input, Table } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import axios from "axios";
+import { useSearchParams } from "react-router-dom";
 
 const CarServiceCenterTable = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [data, setData] = useState({
     data: [],
     total: 0,
   });
-  const urlString = window.location.search;
-  const urlParams = new URLSearchParams(urlString);
-  const pageVal = urlParams.get("page");
-  const pageSizeVal = urlParams.get("pageSize");
-  const [page, setPage] = useState(pageVal ? Number(pageVal) : 1);
-  const [pageSize, setPageSize] = useState(
-    pageSizeVal ? Number(pageSizeVal) : 10
-  );
-  window.history.pushState(
-    {},
-    "",
-    `/service-center?page=${pageVal ? pageVal : 1}&pageSize=${
-      pageSizeVal ? pageSizeVal : 10
-    }`
-  );
 
-  const setParams = (page, pageSize) => {
-    setPage(page);
-    setPageSize(pageSize);
-    window.history.pushState(
-      {},
-      "",
-      `/service-center?page=${page}&pageSize=${pageSize}`
-    );
+  const onChangePagination = (page, pageSize) => {
+    searchParams.set("page", page);
+    searchParams.set("pageSize", pageSize);
+    setSearchParams(searchParams);
   };
-  const handleChange = (page, pageSize) => {
-    setParams(page, pageSize);
-  };
+
+  const onSearch = (e) => {
+
+    searchParams.set("search", e.target.value);
+    searchParams.set("page", 1);
+    setSearchParams(searchParams);
+
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       const response = await axios(
-        `http://localhost:3001/api/service-centers?pageSize=${pageSize}&page=${page}`
+        `http://localhost:3001/api/service-centers?pageSize=${searchParams.get(
+          "pageSize"
+        )}&page=${searchParams.get("page")}&search=${searchParams.get(
+          "search"
+        )}`
       );
       setData(response.data);
     };
 
     fetchData();
-  }, [page, pageSize]);
+
+    // TODO: fix the following line
+  }, [searchParams]);
 
   // TODO: Get columns information from data source.
   const columns = [
@@ -92,16 +88,19 @@ const CarServiceCenterTable = () => {
         size="large"
         placeholder="Search..."
         suffix={<SearchOutlined />}
+        value={searchParams.get("search")}
+        onChange={onSearch}
       />
+
       <Table
         size="small"
         columns={columns}
         dataSource={data.data}
         pagination={{
-          pageSize, // pageSize: pageSize
-          current: page,
+          pageSize: parseInt(searchParams.get("pageSize")),
+          current: parseInt(searchParams.get("page")),
           total: data.total,
-          onChange: handleChange,
+          onChange: onChangePagination,
         }}
         scroll={{ y: "calc(100vh - 400px)" }}
         rowKey="id"
