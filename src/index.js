@@ -5,6 +5,9 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
+import axios from "axios";
+
+axios.defaults.baseURL = "http://localhost:3001/api";
 const router = createBrowserRouter([
   {
     path: "/sample-grid",
@@ -13,10 +16,12 @@ const router = createBrowserRouter([
 ]);
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
+
+// TODO: StrictMode causes double render use it in production only
 root.render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <RouterProvider router={router} />
-  </React.StrictMode>
+  // </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function

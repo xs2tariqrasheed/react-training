@@ -1,105 +1,96 @@
-import React, { useState, useEffect } from "react";
-import { Input, Table } from "antd";
+import { Button, Input, Table, TimePicker, message } from "antd";
+import React, { useEffect } from "react";
 import { SearchOutlined } from "@ant-design/icons";
-import axios from "axios";
-import { useSearchParams } from "react-router-dom";
+
+import columns from "./columns";
+import useSearchParams from "../../hooks/useSearchParams";
+import useFetch from "../../hooks/useFetch";
+import useIsFirstTimeRender from "../../hooks/useIsFirstTimeRender";
 
 const CarServiceCenterTable = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const [data, setData] = useState({
-    data: [],
-    total: 0,
+  const isFirstRender = useIsFirstTimeRender();
+  const {
+    page,
+    pageSize,
+    search,
+    startTime,
+    endTime,
+    searchParams,
+    updateSearchParams,
+  } = useSearchParams({
+    optional: ["search", "startTime", "endTime"],
   });
 
-  const onChangePagination = (page, pageSize) => {
-    searchParams.set("page", page);
-    searchParams.set("pageSize", pageSize);
-    setSearchParams(searchParams);
+  const {
+    loading,
+    data: { data, total },
+    refetch,
+  } = useFetch("/service-centers", {
+    params: {
+      page: page.value,
+      pageSize: pageSize.value,
+      search: search.value || "",
+    },
+    initialData: { data: [], total: 0 },
+    onError: (error) => message.error(error.message),
+  });
+
+  // CORRECTNESS
+
+  const onChangePagination = (p, size) => {
+    page.setValue(p);
+
+    pageSize.setValue(size);
+    updateSearchParams();
   };
 
+  // TODO: use debounce for search
   const onSearch = (e) => {
-
-    searchParams.set("search", e.target.value);
-    searchParams.set("page", 1);
-    setSearchParams(searchParams);
-
-  }
+    search.setValue(e.target.value);
+    page.setValue(1);
+    updateSearchParams();
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      const response = await axios(
-        `http://localhost:3001/api/service-centers?pageSize=${searchParams.get(
-          "pageSize"
-        )}&page=${searchParams.get("page")}&search=${searchParams.get(
-          "search"
-        )}`
-      );
-      setData(response.data);
-    };
-
-    fetchData();
-
-    // TODO: fix the following line
+    if (isFirstRender) return;
+    refetch();
   }, [searchParams]);
-
-  // TODO: Get columns information from data source.
-  const columns = [
-    {
-      title: "Name",
-      dataIndex: "name",
-      render: (text, object, index) => <b>{text}</b>,
-    },
-    {
-      title: "Phone",
-      dataIndex: "phone",
-    },
-    {
-      title: "Address",
-      dataIndex: "address",
-    },
-    {
-      title: "Logo",
-      dataIndex: "logo",
-      render: (text) => <img src={text} alt="Logo" />,
-    },
-    {
-      title: "Opening Time",
-      dataIndex: "openingTime",
-    },
-    {
-      title: "Closing Time",
-      dataIndex: "closingTime",
-    },
-    {
-      title: "Rating",
-      dataIndex: "rating",
-    },
-    {
-      title: "Capacity",
-      dataIndex: "capacity",
-    },
-  ];
 
   return (
     <>
+      <Button onClick={refetch} disabled={loading}>
+        Refresh
+      </Button>
+      <TimePicker
+        onChange={(_, str) => {
+          startTime.setValue(str);
+          updateSearchParams();
+        }}
+      />
+      <TimePicker
+        onChange={(_, str) => {
+          endTime.setValue(str);
+          updateSearchParams();
+        }}
+      />
       <Input
         style={{ float: "right", width: 350, marginBottom: 20 }}
         size="large"
         placeholder="Search..."
         suffix={<SearchOutlined />}
-        value={searchParams.get("search")}
+        value={search.value}
         onChange={onSearch}
       />
 
       <Table
+        loading={loading}
         size="small"
         columns={columns}
-        dataSource={data.data}
+        dataSource={data}
         pagination={{
-          pageSize: parseInt(searchParams.get("pageSize")),
-          current: parseInt(searchParams.get("page")),
-          total: data.total,
+          pageSize: parseInt(pageSize.value),
+          current: parseInt(page.value),
+          total: total || 0,
           onChange: onChangePagination,
         }}
         scroll={{ y: "calc(100vh - 400px)" }}
