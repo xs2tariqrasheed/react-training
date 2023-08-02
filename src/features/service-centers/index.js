@@ -1,14 +1,20 @@
-import { Button, Input, Table, TimePicker, message } from "antd";
+import { Button, Input, Table, TimePicker, message, Modal } from "antd";
 import React, { useEffect } from "react";
 import { SearchOutlined } from "@ant-design/icons";
 
 import columns from "./columns";
 import useSearchParams from "../../hooks/useSearchParams";
+import { useNavigate, useParams, useSearchParams as useSearchParamsRR } from "react-router-dom";
 import useFetch from "../../hooks/useFetch";
 import useIsFirstTimeRender from "../../hooks/useIsFirstTimeRender";
+import CreateForm from "./form";
+import usePostRequest from "../../hooks/usePostRequest";
 
 const CarServiceCenterTable = () => {
+  const { id } = useParams()
+  const navigate = useNavigate()
   const isFirstRender = useIsFirstTimeRender();
+  const { loading: createLoading, error, postData } = usePostRequest('/service-centers');
   const {
     page,
     pageSize,
@@ -27,9 +33,9 @@ const CarServiceCenterTable = () => {
     refetch,
   } = useFetch("/service-centers", {
     params: {
-      page: page.value,
-      pageSize: pageSize.value,
-      search: search.value || "",
+      page: page?.value,
+      pageSize: pageSize?.value,
+      search: search?.value || "",
     },
     initialData: { data: [], total: 0 },
     onError: (error) => message.error(error.message),
@@ -56,6 +62,10 @@ const CarServiceCenterTable = () => {
     refetch();
   }, [searchParams]);
 
+  const handleCancel = () => {
+    navigate('../sample-grid/list?page=1&pageSize=10', { replace: true })
+  }
+
   return (
     <>
       <Button onClick={refetch} disabled={loading}>
@@ -73,8 +83,11 @@ const CarServiceCenterTable = () => {
           updateSearchParams();
         }}
       />
+      <Button style={{ float: "right", }} size="large" type="primary" onClick={() => navigate('../sample-grid/create', { replace: true })}>
+        Create
+      </Button>
       <Input
-        style={{ float: "right", width: 350, marginBottom: 20 }}
+        style={{ float: "right", width: 350, marginBottom: 20, marginRight: 30 }}
         size="large"
         placeholder="Search..."
         suffix={<SearchOutlined />}
@@ -82,20 +95,24 @@ const CarServiceCenterTable = () => {
         onChange={onSearch}
       />
 
+
       <Table
-        loading={loading}
+        loading={loading || createLoading}
         size="small"
         columns={columns}
         dataSource={data}
         pagination={{
-          pageSize: parseInt(pageSize.value),
-          current: parseInt(page.value),
+          pageSize: pageSize && parseInt(pageSize.value),
+          current: page && parseInt(page.value),
           total: total || 0,
           onChange: onChangePagination,
         }}
         scroll={{ y: "calc(100vh - 400px)" }}
         rowKey="id"
       />
+      <Modal destroyOnClose title="Create Service" open={id === 'create'} footer={null} onCancel={handleCancel} >
+        <CreateForm refetch={refetch} postData={postData} onCancel={handleCancel} />
+      </Modal>
     </>
   );
 };
