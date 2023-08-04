@@ -1,0 +1,17 @@
+.circle {
+    display: flex;
+    justify-content: center;
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    border: none;
+    text-align: center;
+    font-size: x-large;
+    margin-right: 10px;
+  }
+  .circle-optional {
+  box-shadow: inset 0px 0px 0px 4px lightblue;
+  }
+  .circle div {
+    align-self: center;
+  }

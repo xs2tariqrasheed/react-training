@@ -1,11 +1,10 @@
-import logo from './logo.svg';
 import './App.css';
-import CarServiceCenterTable from './features/service-centers';
+import ReferenceModule from './features/reference-module';
 
 function App() {
   return (
     <div className="App">
-      <CarServiceCenterTable />
+      <ReferenceModule />
     </div>
   );
 }
