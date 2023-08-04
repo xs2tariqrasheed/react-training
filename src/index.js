@@ -10,7 +10,7 @@ import axios from "axios";
 axios.defaults.baseURL = "http://localhost:3001/api";
 const router = createBrowserRouter([
   {
-    path: "/sample-grid",
+    path: "/sample-grid/:id",
     element: <App />,
   },
 ]);
