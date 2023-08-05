@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 
+
+// remove it
 const useFetch = (apiRoute, axiosConfig = {}) => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(axiosConfig.initialData);
